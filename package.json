@@ -1,0 +1,26 @@
+{
+  "name": "fso4-bloglist",
+  "version": "0.0.1",
+  "description": "full stack open exercise 4",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://mmakela18:${GIT_TOKEN}@github.com/mmakela18/FSO4-bloglist.git"
+  },
+  "author": "Mikko Mäkelä",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mmakela18/FSO4-bloglist/issues"
+  },
+  "homepage": "https://github.com/mmakela18/FSO4-bloglist#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.0.12"
+  }
+}

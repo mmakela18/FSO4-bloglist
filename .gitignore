@@ -1,3 +1,7 @@
+### SELF ADDED ###
+.env
+
+### GIT AUTOMATIC IGNORES ###
 # Logs
 logs
 *.log
