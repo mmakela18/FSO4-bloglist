@@ -4,6 +4,7 @@ const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 const config = require('./utils/config')
+const logger = require('./utils/logger')
 
 const blogSchema = mongoose.Schema({
   title: String,
@@ -12,11 +13,9 @@ const blogSchema = mongoose.Schema({
   likes: Number
 })
 
-console.log(config.PORT)
 const Blog = mongoose.model('Blog', blogSchema)
-console.log(config.MONGODB_URI)
 mongoose.connect(config.MONGODB_URI)
-console.log("connected to mongodb")
+logger.info("connected to mongodb")
 app.use(cors())
 app.use(express.json())
 
@@ -39,5 +38,5 @@ app.post('/api/blogs', (request, response) => {
 })
 
 app.listen(config.PORT, () => {
-  console.log(`Server running on port ${config.PORT}`)
+  logger.info(`Server running on port ${config.PORT}`)
 })
