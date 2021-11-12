@@ -7,7 +7,7 @@ const logger = require('./utils/logger')
 const app = express()
 
 mongoose.connect(config.MONGODB_URI)
-logger.info("connected to mongodb")
+logger.info('connected to mongodb')
 app.use(cors())
 app.use(express.json())
 

@@ -14,4 +14,4 @@ Attempted solution: do over 30 minutes of research on why dotenv doesn't load .e
 Actual solution: put on glasses and see that MONDODB_URI =/= MONGODB_URI
 
 Also learned that dotenv won't override local environment variables.
-So defining PORT in ~/.bashrc in previous exercise was a mistake. :(
+So defining PORT in ~/.bashrc in previous exercise was a rookie mistake.
