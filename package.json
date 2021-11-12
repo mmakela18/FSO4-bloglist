@@ -4,12 +4,12 @@
   "description": "full stack open exercise 4",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
+    "start": "NODE_ENV=production node index.js",
+    "test": "NODE_ENV=test jest --verbose --runInBand",
+    "test:blogs": "npm test -- tests/blogs.test.js",
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
-    "test": "jest --verbose"
+    "lint:fix": "eslint --fix ."
   },
   "repository": {
     "type": "git",
@@ -31,9 +31,7 @@
   "devDependencies": {
     "eslint": "^8.2.0",
     "eslint-plugin-react": "^7.27.0",
-    "jest": "^27.3.1"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "jest": "^27.3.1",
+    "supertest": "^6.1.6"
   }
 }
