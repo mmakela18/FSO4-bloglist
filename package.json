@@ -7,7 +7,7 @@
     "start": "NODE_ENV=production node index.js",
     "test": "NODE_ENV=test jest --verbose --runInBand",
     "test:blogs": "npm test -- tests/blogs.test.js",
-    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "dev": "NODE_ENV=development nodemon index.js",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },
