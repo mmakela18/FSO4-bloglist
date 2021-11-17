@@ -24,6 +24,15 @@ test('blogs retrieved as JSON', async () => {
     .expect('Content-Type', /application\/json/)
 })
 
+test('id defined as "id"', async () => {
+  // fetch all blog-entries
+  const res = await api.get('/api/blogs')
+  // take the first entry
+  const entry = res.body[0]
+  expect(entry.id).toBeDefined()
+
+})
+
 afterAll( () => {
   mongoose.connection.close()
 })

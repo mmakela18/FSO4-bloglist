@@ -3,6 +3,13 @@ Bloglist exercise, Fullstackopen 2021
 
 Lessee :D
 
+# How to run:
+
+Clone repository
+Run "npm install" in its directory
+Define ENVs PORT and MONGODB_URI (.env supportedl)
+Run "npm start"
+
 # Cataloque of bashing my head to the wall
 
 ## 10.11.2021
