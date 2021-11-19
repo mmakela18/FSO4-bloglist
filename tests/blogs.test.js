@@ -53,6 +53,23 @@ test('can POST a blog entry', async () => {
 
 })
 
+test('likes defaults to 0', async () => {
+  const toPost = {
+    title: "Nobody likes me",
+    author: "A. Hitler",
+    url: "Berlin"
+  }
+  // POST
+  const res = await api.post('/api/blogs').send(toPost).expect(201)
+  expect(res.body.likes).toEqual(0)
+})
+
+test('cant POST without author or title', async () => {
+  const toPost = {
+    title: "I have no author"
+  }
+  await api.post('/api/blogs').send(toPost).expect(400)
+})
 
 afterAll( () => {
   mongoose.connection.close()
