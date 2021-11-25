@@ -91,7 +91,7 @@ describe('testing POST for blogs', () => {
   })
 })
 // Tests for users
-describe('testing POST for users', () => {
+describe('testing users', () => {
   beforeEach(async () => {
     // Init with one user for each test
     await User.deleteMany({})
@@ -112,7 +112,13 @@ describe('testing POST for users', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
+  test('can GET users', async () => {
+    await api.get('/api/users')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
 })
+
 afterAll( () => {
   mongoose.connection.close()
 })

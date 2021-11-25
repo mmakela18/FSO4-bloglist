@@ -1,7 +1,7 @@
 ### SELF ADDED ###
 .env
 requests
-
+.rest
 ### GIT AUTOMATIC IGNORES ###
 # Logs
 logs
