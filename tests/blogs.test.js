@@ -12,7 +12,7 @@ const blogImport = require('./blogs')
 const blogs = blogImport.blogs
 
 beforeEach(async () => {
-  await Blog.deleteMany({})
+  await Blog.deleteMany({}).exec()
   blogs.forEach( async (blog) => {
     let newBlog = new Blog(blog)
     await newBlog.save()
@@ -45,7 +45,7 @@ describe('testing GET for blogs', () => {
 
 describe('testing POST for blogs', () => {
   //beforeEach(async () => {
-    //await Blog.deleteMany({})
+    //await Blog.deleteMany({}).exec()
     //blogs.forEach( async (blog) => {
       //let newBlog = new Blog(blog)
       //await newBlog.save()
@@ -107,10 +107,11 @@ describe('testing users', () => {
       username: 'uusi',
       password: '1234'
     }
-    await api.post('/api/users')
-      .send(newUser)
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
+    const res = await api.post('/api/users').send(newUser)
+    expect(res.status).toEqual(200)
+    expect(res.headers['content-type']).toContain('application/json')
+    console.log(res.body)
+    expect(res.body.user).toBeDefined()
   })
   test('can GET users', async () => {
     await api.get('/api/users')
