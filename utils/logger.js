@@ -4,6 +4,12 @@ const info = (...params) => {
   }
 }
 
+const error = (...params) => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(...params)
+  }
+}
+
 module.exports = {
-  info
+  info, error
 }

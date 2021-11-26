@@ -117,6 +117,15 @@ describe('testing users', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
+  test('cant add duplicate username', async () => {
+    const duplicate = {
+      username: 'roflkopteri',
+      password: '666'
+    }
+    await api.post('/api/users')
+      .send(duplicate)
+      .expect(400)
+  })
 })
 
 afterAll( () => {
