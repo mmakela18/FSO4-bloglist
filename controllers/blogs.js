@@ -1,6 +1,16 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user')
+const User = require('../models/user') 
+const jwt = require('jsonwebtoken')
+
+const getTokenFrom = req => {
+  const auth = req.get('authorization')
+  if (auth && auth.toLowerCase().startsWith('bearer ')) {
+    return auth.substring(7)
+  }
+  return null
+}
+
 
 blogsRouter.get('/blogs', async(req, res, next) => {
   // fetch all entries
@@ -15,9 +25,15 @@ blogsRouter.get('/blogs', async(req, res, next) => {
 })
 
 blogsRouter.post('/blogs', async(req, res, next) => {
+  const token = getTokenFrom(req)
+  if (!token) return res.status(401).json({error: 'no token provided'})
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  if(!decodedToken) {
+    return res.status(401).json({ error: 'invalid authentication token' })
+  }
   const postBlog = new Blog(req.body)
   // for now: just place the first user in db as author
-  const user = await User.findOne()
+  const user = await User.findById(decodedToken.id)
   const withUser = new Blog({
     title: postBlog.title,
     author: postBlog.author,
