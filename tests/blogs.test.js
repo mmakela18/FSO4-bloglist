@@ -94,13 +94,13 @@ describe('testing POST for blogs', () => {
 describe('testing users', () => {
   beforeEach(async () => {
     // Init with one user for each test
-    await User.deleteMany({})
+    await User.deleteMany({}).exec()
     const testHash = await bcrypt.hash('lolleromato', 10)
     const testUser = new User({
       username: 'roflkopteri',
       pwhash: testHash
     })
-    await testUser.save()
+    return await testUser.save()
   })
   test('can POST user', async () => {
     const newUser = {
@@ -124,6 +124,30 @@ describe('testing users', () => {
     }
     await api.post('/api/users')
       .send(duplicate)
+      .expect(400)
+  })
+  test('cant add a short username', async () => {
+    const namelet = {
+      username: ':(',
+      password: 'nameletin raja on 3 merkkiä'
+    }
+    await api.post('/api/users')
+      .send(namelet)
+      .expect(400)
+  })
+  test('cant use a short or nonexistent password', async () => {
+    const pwlet = {
+      username: 'sufficient',
+      password: 'pw'
+    }
+    await api.post('/api/users')
+      .send(pwlet)
+      .expect(400)
+    const nopw = {
+      username: 'nopw'
+    }
+    await api.post('/api/users')
+      .send(nopw)
       .expect(400)
   })
 })
