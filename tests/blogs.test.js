@@ -61,14 +61,15 @@ describe('testing POST for blogs', () => {
       __v: 0
     }
     // POST
-    postRes = await api.post('/api/blogs')
+    const postRes = await api.post('/api/blogs')
       .send(toPost)
       .expect(201)
     // see that length actually increased
     const res = await api.get('/api/blogs')
     expect(res.body).toHaveLength(blogs.length + 1)
     // see that the entry actually matches what was sent
-    expect(res.body).toContainEqual(postRes.body)
+    expect(postRes.body.author).toEqual(toPost.author)
+    expect(postRes.body.title).toEqual(toPost.title)
 
   })
 
@@ -110,8 +111,6 @@ describe('testing users', () => {
     const res = await api.post('/api/users').send(newUser)
     expect(res.status).toEqual(200)
     expect(res.headers['content-type']).toContain('application/json')
-    console.log(res.body)
-    expect(res.body.user).toBeDefined()
   })
   test('can GET users', async () => {
     await api.get('/api/users')
