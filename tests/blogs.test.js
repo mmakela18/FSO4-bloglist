@@ -131,9 +131,9 @@ describe('testing users', () => {
       username: ':(',
       password: 'nameletin raja on 3 merkkiä'
     }
-    await api.post('/api/users')
-      .send(namelet)
-      .expect(400)
+    let res = await api.post('/api/users').send(namelet)
+    expect(res.status).toEqual(400)
+    expect(res.body.error).toContain('validation failed')
   })
   test('cant use a short or nonexistent password', async () => {
     const pwlet = {
