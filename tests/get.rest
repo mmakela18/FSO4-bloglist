@@ -1,1 +1,1 @@
-GET http://localhost:3003/api/users
+DELETE http://localhost:3003/api/blogs/5a422a851b54a676234d17f7

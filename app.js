@@ -15,6 +15,7 @@ logger.info('connected to mongodb')
 app.use(cors())
 app.use(express.json())
 
+app.use(middleware.tokenExtractor)
 app.use('/api', blogsRouter)
 app.use('/api', usersRouter)
 app.use('/api', loginRouter)

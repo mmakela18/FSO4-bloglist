@@ -1,5 +1,13 @@
 const logger = require('./logger')
 
+const tokenExtractor = (req, res, next) => {
+  const auth = req.get('authorization')
+  if (auth && auth.toLowerCase().startsWith('bearer ')) {
+    req.token = auth.substring(7)
+  }
+  next()
+}
+
 const errorHandler = (err, req, res, next) => {
   logger.error(err.message)
   if (err.name === 'ValidationError') {
@@ -8,4 +16,4 @@ const errorHandler = (err, req, res, next) => {
   next(err)
 }
 
-module.exports = { errorHandler }
+module.exports = { errorHandler, tokenExtractor }

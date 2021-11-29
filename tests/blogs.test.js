@@ -74,7 +74,6 @@ describe('testing POST for blogs', () => {
     const res = await api.post('/api/login')
       .send(loginUser)
       .expect(200)
-    console.log(res.body)
     expect(res.body.token).toBeDefined()
     // still gotta add the "bearer" part
     token = `bearer ${res.body.token}`
@@ -184,6 +183,49 @@ describe('testing users', () => {
     await api.post('/api/users')
       .send(nopw)
       .expect(400)
+  })
+})
+
+describe('testing DELETE', () => {
+  // variables for login token and post ID
+  let token = ''
+  let postId = ''
+  // Need to create user and post a blog to test
+  beforeEach( async() => {
+    // Initialize user
+    await User.deleteMany({})
+    const testHash = await bcrypt.hash('lolleromato', 10)
+    const testUser = new User({
+      username: 'roflkopteri',
+      pwhash: testHash
+    })
+    await testUser.save()
+    // Login and save token
+    const loginUser = {
+      username: 'roflkopteri',
+      password: 'lolleromato'
+    }
+    const postRes = await api.post('/api/login').send(loginUser)
+    token = `bearer ${postRes.body.token}`
+    // Make a blog
+    const testPost = {
+      title: 'testi',
+      author: 'testi'
+    }
+    const res = await api.post('/api/blogs')
+      .send(testPost)
+      .set('Authorization', token)
+    //console.log(res)
+    postId = res.body.id
+  })
+  test('cannot delete a post without authorization', async() => {
+    await api.delete(`/api/blogs/${postId}`)
+      .expect(401)
+  })
+  test('can delete a blog with proper authorization', async() => {
+    await api.delete(`/api/blogs/${postId}`)
+      .set('Authorization', token)
+      .expect(204)
   })
 })
 
