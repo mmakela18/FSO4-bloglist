@@ -11,6 +11,16 @@ const Blog = require('../models/blog')
 const blogImport = require('./blogs')
 const blogs = blogImport.blogs
 
+/*
+New test-suite:
+  no-login-tests:
+    beforeEach:
+      clear blogs
+      repopulate blogs
+    
+  
+*/
+
 beforeEach(async () => {
   await Blog.deleteMany({}).exec()
   blogs.forEach( async (blog) => {
@@ -44,13 +54,31 @@ describe('testing GET for blogs', () => {
 })
 
 describe('testing POST for blogs', () => {
-  //beforeEach(async () => {
-    //await Blog.deleteMany({}).exec()
-    //blogs.forEach( async (blog) => {
-      //let newBlog = new Blog(blog)
-      //await newBlog.save()
-    //})
-  //})
+  // variable to save authentication token from first test (login)
+  let token = ''
+  // POST requires authentication: create test user before tests
+  beforeAll(async () => {
+    await User.deleteMany({}).exec()
+    const testhash = await bcrypt.hash('lolleromato', 10)
+    const testUser = new User({
+      username: 'roflkopteri',
+      pwhash: testhash
+    })
+    await testUser.save()
+  })
+  test('can login and get token', async() => {
+    const loginUser = {
+      username: 'roflkopteri',
+      password: 'lolleromato'
+    }
+    const res = await api.post('/api/login')
+      .send(loginUser)
+      .expect(200)
+    console.log(res.body)
+    expect(res.body.token).toBeDefined()
+    // still gotta add the "bearer" part
+    token = `bearer ${res.body.token}`
+  })
   test('can POST a blog entry', async () => {
     // single new entry
     const toPost = {
@@ -63,6 +91,7 @@ describe('testing POST for blogs', () => {
     // POST
     const postRes = await api.post('/api/blogs')
       .send(toPost)
+      .set('Authorization', token)
       .expect(201)
     // see that length actually increased
     const res = await api.get('/api/blogs')
@@ -80,7 +109,10 @@ describe('testing POST for blogs', () => {
       url: "Berlin"
     }
     // POST
-    const res = await api.post('/api/blogs').send(toPost).expect(201)
+    const res = await api.post('/api/blogs')
+      .send(toPost)
+      .set('Authorization', token)
+      .expect(201)
     expect(res.body.likes).toEqual(0)
   })
 
@@ -88,7 +120,10 @@ describe('testing POST for blogs', () => {
     const toPost = {
       title: "I have no author"
     }
-    await api.post('/api/blogs').send(toPost).expect(400)
+    await api.post('/api/blogs')
+      .send(toPost)
+      .set('Authorization', token)
+      .expect(400)
   })
 })
 // Tests for users
