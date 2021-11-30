@@ -11,223 +11,277 @@ const Blog = require('../models/blog')
 const blogImport = require('./blogs')
 const blogs = blogImport.blogs
 
+// define paths for routes
+const BLOGS = '/api/blogs'
+const USERS = '/api/users'
+const LOGIN = '/api/login'
+
 /*
-New test-suite:
-  no-login-tests:
-    beforeEach:
-      clear blogs
-      repopulate blogs
-    
-  
+  Rethink tests:
+    doesn't require authentication:
+      POST users
+        -can register valid user
+          (clear users-database)
+        -can't register invalid user
+          (clear users-database)
+      POST login
+        -can login with right authentication
+        -can't login without right authentication
+        -can't login without authentication
+    requires authentication:
+        (clear users and register a user)
+      GET users
+        -can't GET without right authentication
+          (populate users)
+        -can't GET without authentication
+          (populate users)
+        -can GET with good authentication
+          (populate users)
+      GET blogs
+        -can't GET without correct authentication
+          (populate blogs)
+        -can't GET without authentication
+          (populate blogs)
+        -can GET with correct authentication
+          (populate blogs)
+      POST blogs
+        -can't POST without authentication
+      DELETE blogs
+
+  So really tests should be divided to:
+  beforeAll(clear and populate both users and blogs)
+    describe(testing WITHOUT authentication)
+      test(cannot register an invalid user)
+      test(cannot GET users)
+      test(cannot GET blogs)
+      test(cannot POST blogs)
+      test(cannot DELETE blogs)
+      test(can POST a valid user)
+      test(cannot POST login without valid credentials)
+      test(cannot POST login with missing credentials)
+        ### EXIT IF FAIL ###
+      describe(testing WITH authentication, no change to db)
+        test(can POST login)
+        test(can GET users)
+        test(can GET blogs)
+        describe(testing WITH authentication, changes to db)
+          test(can POST blogs)
+          test(can DELETE blogs)
 */
 
-beforeEach(async () => {
+// dummy to populate users with
+const dummyUser = {
+  username: 'dummy',
+  pwhash: 'dummy'
+}
+// user to use in testing
+const testUser = {
+  username: 'testing',
+  password: 'testing'
+}
+// init login-token for testUser
+let testToken = ''
+beforeAll(async () => {
+  // clear users and blogs
+  await User.deleteMany({}).exec()
   await Blog.deleteMany({}).exec()
-  blogs.forEach( async (blog) => {
-    let newBlog = new Blog(blog)
-    await newBlog.save()
+  // populate blogs
+  blogs.forEach(async (blog) => {
+    await new Blog(blog).save()
   })
+  // populate users
+  await new User(dummyUser).save()
+  // give the testhash value
 })
 
-describe('testing GET for blogs', () => {
-  //beforeEach(async () => {
-    //await Blog.deleteMany({})
-    //blogs.forEach( async (blog) => {
-      //let newBlog = new Blog(blog)
-      //await newBlog.save()
-    //})
-  //})
-  test('blogs retrieved as JSON', async () => {
-    await api
-      .get('/api/blogs')
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
+describe('tests without authentication', () => {
+  // expecting same results from multiple tests
+  const deniedWithError401 = (res) => {
+    expect(res.status).toEqual(401)
+    expect(res.type).toEqual('application/json')
+    // not expecting a specific error msg, since that may change
+    expect(res.body.error).toBeDefined()
+  }
+  // GET users should fail and return an error message
+  test('cannot GET users', async () => {
+    const res = await api.get(USERS)
+    deniedWithError401(res)
   })
-
-  test('id defined as "id"', async () => {
-    // fetch all blog-entries
-    const res = await api.get('/api/blogs')
-    // take the first entry
-    const entry = res.body[0]
-    expect(entry.id).toBeDefined()
+  // GET blogs should fail as above
+  test('cannot GET blogs', async () => {
+    const res = await api.get(BLOGS)
+    deniedWithError401(res)
+  })
+  // as should POST
+  test('cannot POST blogs', async () => {
+    const blogToPost = {
+      author: 'some dummy',
+      title: 'posting blogs for dummies'
+    }
+    const res = await api.get(BLOGS).send(blogToPost)
+    deniedWithError401(res)
+  })
+  test('cannot DELETE blogs', async () => {
+    // get a blog for id
+    const blogToDelete = Blog.findOne({})
+    deniedWithError401(await api.delete(BLOGS).send(blogToDelete.id))
   })
 })
-
-describe('testing POST for blogs', () => {
-  // variable to save authentication token from first test (login)
-  let token = ''
-  // POST requires authentication: create test user before tests
-  beforeAll(async () => {
-    await User.deleteMany({}).exec()
-    const testhash = await bcrypt.hash('lolleromato', 10)
-    const testUser = new User({
-      username: 'roflkopteri',
-      pwhash: testhash
-    })
-    await testUser.save()
-  })
-  test('can login and get token', async() => {
-    const loginUser = {
-      username: 'roflkopteri',
-      password: 'lolleromato'
+// test posting users
+describe('testing POST users', () => {
+  const deniedWithError400 = (res) => {
+    expect(res.status).toEqual(400)
+    // just ensure there is some error msg sent in json
+    expect(res.type).toEqual('application/json')
+    expect(res.body.error).toBeDefined()
+  }
+  test('cannot POST a duplicate username', async () => {
+    // db should already be initialized with dummyUser
+    const duplicate = {
+      username: dummyUser.username,
+      password: 'irrelevant'
     }
-    const res = await api.post('/api/login')
-      .send(loginUser)
-      .expect(200)
-    expect(res.body.token).toBeDefined()
-    // still gotta add the "bearer" part
-    token = `bearer ${res.body.token}`
+    const res = await api.post(USERS).send(duplicate)
+    deniedWithError400(res)
   })
-  test('can POST a blog entry', async () => {
-    // single new entry
-    const toPost = {
-      title: "Creation",
-      author: "God",
-      url: "everywhere",
-      likes: 1,
-      __v: 0
+  // shortest allowed password/username should be 3
+  test('cannot POST a short username or password', async () => {
+    let shortie = {
+      username: ':(', // sorry, not everyone is born equal
+      password: 'long enough'
     }
-    // POST
-    const postRes = await api.post('/api/blogs')
-      .send(toPost)
-      .set('Authorization', token)
-      .expect(201)
-    // see that length actually increased
-    const res = await api.get('/api/blogs')
-    expect(res.body).toHaveLength(blogs.length + 1)
-    // see that the entry actually matches what was sent
-    expect(postRes.body.author).toEqual(toPost.author)
-    expect(postRes.body.title).toEqual(toPost.title)
-
+    deniedWithError400(await api.post(USERS).send(shortie))
+    // swap fields and retry
+    shortie.username = 'long enough'
+    shortie.password = ':(' // don't be sad, you'll be in garbage disposal soon
+    deniedWithError400(await api.post(USERS).send(shortie))
   })
-
-  test('likes defaults to 0', async () => {
-    const toPost = {
-      title: "Nobody likes me",
-      author: "A. Hitler",
-      url: "Berlin"
+  // fields username and password should be required
+  test('cannot POST with missing username or password', async () => {
+    const nameless = {
+      password: 'irrelevant'
     }
-    // POST
-    const res = await api.post('/api/blogs')
-      .send(toPost)
-      .set('Authorization', token)
-      .expect(201)
-    expect(res.body.likes).toEqual(0)
-  })
-
-  test('cant POST without author or title', async () => {
-    const toPost = {
-      title: "I have no author"
+    deniedWithError400(await api.post(USERS).send(nameless))
+    const passwordless = {
+      username: 'irrelevant'
     }
-    await api.post('/api/blogs')
-      .send(toPost)
-      .set('Authorization', token)
-      .expect(400)
+    deniedWithError400(await api.post(USERS).send(passwordless))
   })
-})
-// Tests for users
-describe('testing users', () => {
-  beforeEach(async () => {
-    // Init with one user for each test
-    await User.deleteMany({}).exec()
-    const testHash = await bcrypt.hash('lolleromato', 10)
-    const testUser = new User({
-      username: 'roflkopteri',
-      pwhash: testHash
-    })
-    return await testUser.save()
-  })
-  test('can POST user', async () => {
-    const newUser = {
-      username: 'uusi',
-      password: '1234'
-    }
-    const res = await api.post('/api/users').send(newUser)
+  test('can POST with valid user', async () => {
+    // make sure and measure count also
+    const countB4 = await User.count({})
+    const res = await api.post(USERS).send(testUser)
     expect(res.status).toEqual(200)
-    expect(res.headers['content-type']).toContain('application/json')
+    expect(res.type).toEqual('application/json')
+    expect(res.body.username).toEqual(testUser.username)
+    expect(res.body.id).toBeDefined()
+    const countAfter = await User.count({})
+    expect(countAfter).toEqual(countB4 + 1)
+  })
+})
+/* HOX: at this point it is assumed that the previous test succeeded. Otherwise there is no point
+  to proceed. There's no skipping functionality yet, so please run with 'bail:1' in your jest config */
+describe('testing POST login', () => {
+  const deniedWithError401 = (res) => {
+    // copy from earlier, but this may get more login specific later
+    expect(res.status).toEqual(401)
+    expect(res.type).toEqual('application/json')
+    expect(res.body.error).toBeDefined()
+  }
+  beforeAll( async () => {
+    // generate hash for testUser
+  })
+  test('can login with valid credentials', async () => {
+    const res = await api.post(LOGIN).send(testUser)
+    expect(res.status).toEqual(200)
+    expect(res.type).toEqual('application/json')
+    expect(res.body.username).toEqual(testUser.username)
+    expect(res.body.token).toBeDefined()
+    // save token for future tests
+    testToken = `bearer ${res.body.token}`
+  })
+  test('cannot login without credentials', async () => {
+    const notValid = {
+      username: 'notValid',
+      password: 'notValid'
+    }
+    deniedWithError401(await api.post(LOGIN).send(notValid))
+  })
+  test('cannot login with false credentials', async () => {
+    const falseUser = {
+      username: testUser.username,
+      password: 'brute force'
+    }
+    const res = await api.post(LOGIN).send(falseUser)
+    deniedWithError401(res)
+    expect(res.body.token).not.toBeDefined()
+  })
+})
+
+describe('testing with authorization, no db change', () => {
+  const acceptedWith200 = (res) => {
+    expect(res.status).toEqual(200)
+    expect(res.type).toEqual('application/json')
+  }
+  test('can GET blogs', async () => {
+    const res = await api.get(BLOGS)
+      .set('Authorization', testToken)
+    acceptedWith200(res)
   })
   test('can GET users', async () => {
-    await api.get('/api/users')
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-  })
-  test('cant add duplicate username', async () => {
-    const duplicate = {
-      username: 'roflkopteri',
-      password: '666'
-    }
-    await api.post('/api/users')
-      .send(duplicate)
-      .expect(400)
-  })
-  test('cant add a short username', async () => {
-    const namelet = {
-      username: ':(',
-      password: 'nameletin raja on 3 merkkiä'
-    }
-    let res = await api.post('/api/users').send(namelet)
-    expect(res.status).toEqual(400)
-    expect(res.body.error).toContain('validation failed')
-  })
-  test('cant use a short or nonexistent password', async () => {
-    const pwlet = {
-      username: 'sufficient',
-      password: 'pw'
-    }
-    await api.post('/api/users')
-      .send(pwlet)
-      .expect(400)
-    const nopw = {
-      username: 'nopw'
-    }
-    await api.post('/api/users')
-      .send(nopw)
-      .expect(400)
+    const res = await api.get(USERS)
+      .set('Authorization', testToken)
+    acceptedWith200(res)
   })
 })
 
-describe('testing DELETE', () => {
-  // variables for login token and post ID
-  let token = ''
-  let postId = ''
-  // Need to create user and post a blog to test
-  beforeEach( async() => {
-    // Initialize user
-    await User.deleteMany({})
-    const testHash = await bcrypt.hash('lolleromato', 10)
-    const testUser = new User({
-      username: 'roflkopteri',
-      pwhash: testHash
-    })
-    await testUser.save()
-    // Login and save token
-    const loginUser = {
-      username: 'roflkopteri',
-      password: 'lolleromato'
-    }
-    const postRes = await api.post('/api/login').send(loginUser)
-    token = `bearer ${postRes.body.token}`
-    // Make a blog
+describe('testing with authorization, changes to db', () => {
+  // variable to save blog id if POST successfull
+  let testPostId = ''
+  const succeededWith201 = (res) => {
+    expect(res.status).toEqual(201)
+    expect(res.type).toEqual('application/json')
+  }
+  test('can POST blog', async () => {
+    // blog-db already initialized, get initial length
+    const countB4 = await Blog.count()
     const testPost = {
-      title: 'testi',
-      author: 'testi'
+      author: 'GOD',
+      title: 'HOW TO BEAT SATAN'
     }
-    const res = await api.post('/api/blogs')
+    const res = await api.post(BLOGS)
       .send(testPost)
-      .set('Authorization', token)
-    //console.log(res)
-    postId = res.body.id
+      .set('Authorization', testToken)
+    succeededWith201(res)
+    // but did it grow?
+    const countAfter = await Blog.count()
+    expect(countAfter).toEqual(countB4 + 1)
+    // all info intact?
+    expect(res.body.author).toEqual(testPost.author)
+    expect(res.body.title).toEqual(testPost.title)
+    // did likes default to zero?
+    expect(res.body.likes).toEqual(0)
+    // there should also be a user-field that matches the testUser
+    const userFromBlog = await User.findById(res.body.user)
+    expect(userFromBlog.username).toEqual(testUser.username)
+    // AND was this blog added to the testUsers blogs[] field?
+    const blogIdFromResponse = res.body.id.toString()
+    // probably not the right way, but it works for now
+    expect(userFromBlog.blogs.toString()).toContain(blogIdFromResponse)
+    // save id for next test
+    testPostId = res.body.id
   })
-  test('cannot delete a post without authorization', async() => {
-    await api.delete(`/api/blogs/${postId}`)
-      .expect(401)
+  test('can DELETE blog', async () => {
+    const res = await api.delete(`${BLOGS}/${testPostId}`)
+      .set('Authorization', testToken)
+    expect(res.status).toEqual(204)
   })
-  test('can delete a blog with proper authorization', async() => {
-    await api.delete(`/api/blogs/${postId}`)
-      .set('Authorization', token)
-      .expect(204)
+  test('gib 404 when authorized DELETE to nonexistant id', async () => {
+    const res = await api.delete(`${BLOGS}/idontexist`)
+      .set('Authorization', testToken)
+    expect(res.status).toEqual(404)
   })
-})
+}) 
 
 afterAll( () => {
   mongoose.connection.close()

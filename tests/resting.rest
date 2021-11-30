@@ -1,7 +1,7 @@
-POST http://localhost:3003/api/blogs HTTP/1.1
+POST http://localhost:3003/api/login HTTP/1.1
 content-type: application/json
 
 {
-  "title": "testing",
-  "author": "dont care"
+  "username": "dont care",
+  "password": "hullu"
 }
