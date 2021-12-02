@@ -25,10 +25,11 @@ blogsRouter.post('/', async(req, res, next) => {
   const postBlog = new Blog(req.body)
   // for now: just place the first user in db as author
   const user = await User.findById(decodedToken.id)
+  console.log(user)
   const withUser = new Blog({
     title: postBlog.title,
     author: postBlog.author,
-    user: user._id 
+    user: user._id
   })
   try {
     const result = await withUser.save()
