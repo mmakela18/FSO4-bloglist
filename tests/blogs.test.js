@@ -277,12 +277,14 @@ describe('testing with authorization, changes to db', () => {
   test('can PUT blog', async () => {
     // fetch testpost from previous test 
     console.log(testPostId)
-    let postedTestPost = await Blog.findById(testPostId)
     // should be able to change all fields with id remaining the same
-    console.log(postedTestPost)
-    postedTestPost.author = 'changed'
-    postedTestPost.title = 'changed'
-    postedTestPost.likes = '666'
+    const postedTestPost = {
+      ...testPost,
+      author: 'changed',
+      title: 'changed',
+      likes: 666,
+      url: 'http://localhost:3003/'
+    }
     const res = await api.put(`${BLOGS}/${testPostId}`)
       .set('Authorization', testToken)
       .send(postedTestPost)
@@ -291,6 +293,8 @@ describe('testing with authorization, changes to db', () => {
     expect(res.body.author).toEqual(postedTestPost.author)
     expect(res.body.title).toEqual(postedTestPost.title)
     expect(res.body.likes).toEqual(postedTestPost.likes)
+    console.log(res.body)
+    expect(res.body.url).toEqual(postedTestPost.url)
     // id and user should have remained the same
     expect(res.body.id).toEqual(testPostId)
     expect(res.body.user).toEqual(testUserId)

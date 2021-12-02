@@ -45,17 +45,20 @@ blogsRouter.post('/', async(req, res, next) => {
   }
 })
 
-blogsRouter.put('/:id', async(req, res) => {
+blogsRouter.put('/:id', async(req, res, next) => {
   try {
     const id = req.params.id
     // find user and blog, see if owner matches
     let blogToEdit = await Blog.findById(id)
+    console.log(req)
+    console.log(req.user)
     if (req.user._id.toString() === blogToEdit.user.toString()) {
       // for some reason the blog is in _doc, not directly in body
-      const newInfo = req.body._doc
+      const newInfo = req.body
       blogToEdit.title = newInfo.title
       blogToEdit.author = newInfo.author
       blogToEdit.likes = newInfo.likes
+      blogToEdit.url = newInfo.url
       const savedBlog = await blogToEdit.save()
       return res.status(201).json(savedBlog)
     }
