@@ -79,6 +79,7 @@ const testUser = {
   username: 'testing',
   password: 'testing'
 }
+let testUserId = ''
 // init login-token for testUser
 let testToken = ''
 beforeAll(async () => {
@@ -169,13 +170,14 @@ describe('testing POST users', () => {
   })
   test('can POST with valid user', async () => {
     // make sure and measure count also
-    const countB4 = await User.count({})
+    const countB4 = await User.count({}).exec()
     const res = await api.post(USERS).send(testUser)
     expect(res.status).toEqual(200)
     expect(res.type).toEqual('application/json')
     expect(res.body.username).toEqual(testUser.username)
     expect(res.body.id).toBeDefined()
-    const countAfter = await User.count({})
+    testUserId = res.body.id
+    const countAfter = await User.count({}).exec()
     expect(countAfter).toEqual(countB4 + 1)
   })
 })
@@ -238,6 +240,11 @@ describe('testing with authorization, no db change', () => {
 describe('testing with authorization, changes to db', () => {
   // variable to save blog id if POST successfull
   let testPostId = ''
+  // testpost for PUT and POST
+  const testPost = {
+    author: 'GOD',
+    title: 'HOW TO BEAT SATAN'
+  }
   const succeededWith201 = (res) => {
     expect(res.status).toEqual(201)
     expect(res.type).toEqual('application/json')
@@ -245,10 +252,6 @@ describe('testing with authorization, changes to db', () => {
   test('can POST blog', async () => {
     // blog-db already initialized, get initial length
     const countB4 = await Blog.count()
-    const testPost = {
-      author: 'GOD',
-      title: 'HOW TO BEAT SATAN'
-    }
     const res = await api.post(BLOGS)
       .send(testPost)
       .set('Authorization', testToken)
@@ -270,6 +273,27 @@ describe('testing with authorization, changes to db', () => {
     expect(userFromBlog.blogs.toString()).toContain(blogIdFromResponse)
     // save id for next test
     testPostId = res.body.id
+  })
+  test('can PUT blog', async () => {
+    // fetch testpost from previous test 
+    console.log(testPostId)
+    let postedTestPost = await Blog.findById(testPostId)
+    // should be able to change all fields with id remaining the same
+    console.log(postedTestPost)
+    postedTestPost.author = 'changed'
+    postedTestPost.title = 'changed'
+    postedTestPost.likes = '666'
+    const res = await api.put(`${BLOGS}/${testPostId}`)
+      .set('Authorization', testToken)
+      .send(postedTestPost)
+    succeededWith201(res)
+    // check contents were changed
+    expect(res.body.author).toEqual(postedTestPost.author)
+    expect(res.body.title).toEqual(postedTestPost.title)
+    expect(res.body.likes).toEqual(postedTestPost.likes)
+    // id and user should have remained the same
+    expect(res.body.id).toEqual(testPostId)
+    expect(res.body.user).toEqual(testUserId)
   })
   test('can DELETE blog', async () => {
     const res = await api.delete(`${BLOGS}/${testPostId}`)
