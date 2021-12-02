@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
-const bcrypt = require('bcrypt')
 const app = require('../app')
 const User = require('../models/user')
 
@@ -275,7 +274,7 @@ describe('testing with authorization, changes to db', () => {
     testPostId = res.body.id
   })
   test('can PUT blog', async () => {
-    // fetch testpost from previous test 
+    // fetch testpost from previous test
     console.log(testPostId)
     // should be able to change all fields with id remaining the same
     const postedTestPost = {
@@ -309,7 +308,7 @@ describe('testing with authorization, changes to db', () => {
       .set('Authorization', testToken)
     expect(res.status).toEqual(404)
   })
-}) 
+})
 
 afterAll( () => {
   mongoose.connection.close()

@@ -4,15 +4,6 @@ const blogsImport = require('./blogs')
 const blogs = blogsImport.blogs
 console.log(blogs)
 
-describe('testing testing :D', () => {
-  test('dummy returns one', () => {
-    const blogs = []
-    console.log('TÄÄL: ', listHelper)
-    const result = listHelper.dummy(blogs)
-    expect(result).toBe(1)
-  })
-})
-
 describe('list_helper.js: fun totalLikes:', () => {
   // Begin tests
   test('return correct sum for the whole array:', () => {

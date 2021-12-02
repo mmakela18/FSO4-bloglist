@@ -1,8 +1,3 @@
-const dummy = (blogs) => {
-  return 1
-}
-
-// Return number of likes from an array of blog-objects
 const totalLikes = (blogs) => {
   // Check special cases
   if (blogs.length === 0) return 0
@@ -44,7 +39,6 @@ const favoriteBlog = (blogs) => {
 }
 
 module.exports = {
-  dummy,
   totalLikes,
   favoriteBlog
 }

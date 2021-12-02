@@ -1,6 +1,6 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user') 
+const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
 blogsRouter.get('/', async(req, res, next) => {
@@ -17,7 +17,7 @@ blogsRouter.get('/', async(req, res, next) => {
 
 blogsRouter.post('/', async(req, res, next) => {
   const token = req.token
-  if (!token) return res.status(401).json({error: 'no token provided'})
+  if (!token) return res.status(401).json({ error: 'no token provided' })
   const decodedToken = jwt.verify(token, process.env.SECRET)
   if(!decodedToken) {
     return res.status(401).json({ error: 'invalid authentication token' })
