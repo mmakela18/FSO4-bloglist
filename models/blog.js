@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 
+// Define how a blog-entry is saved in the database
 const blogSchema = mongoose.Schema({
   title: { type: String, required: true },
   author: { type: String, required: true },
@@ -10,7 +11,8 @@ const blogSchema = mongoose.Schema({
     ref: 'User'
   }
 })
-// turn mongodb _id field to id as fetching JSON
+
+// Turn mongodb _id(Object) field to id(String) as fetching JSON
 blogSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()

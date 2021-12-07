@@ -1,3 +1,5 @@
+// Just an array of blogs to use in testing
+// Straight from course material
 const blogs = [
   {
     _id: '5a422a851b54a676234d17f7',

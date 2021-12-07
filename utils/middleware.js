@@ -2,6 +2,7 @@ const logger = require('./logger')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 
+// Extract authorization token from request
 const tokenExtractor = (req, res, next) => {
   const auth = req.get('authorization')
   if (auth && auth.toLowerCase().startsWith('bearer ')) {
@@ -26,6 +27,7 @@ const userExtractor = async (req, res, next) => {
   next()
 }
 
+// A severely underuser error-handler
 const errorHandler = (err, req, res, next) => {
   logger.error(err.message)
   if (err.name === 'ValidationError') {

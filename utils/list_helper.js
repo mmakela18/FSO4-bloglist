@@ -1,3 +1,4 @@
+// Why is this file here?
 const totalLikes = (blogs) => {
   // Check special cases
   if (blogs.length === 0) return 0

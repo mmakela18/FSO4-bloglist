@@ -8,13 +8,14 @@ const blogsRouter = require('./controllers/blogs.js')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const middleware = require('./utils/middleware')
-const morgan = require('morgan')
+const morgan = require('morgan') // Logging
 const app = express()
 
 mongoose.connect(config.MONGODB_URI)
 logger.info('connected to mongodb')
 app.use(cors())
 app.use(express.json())
+// Enable logging if not running tests
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('common'))
 }

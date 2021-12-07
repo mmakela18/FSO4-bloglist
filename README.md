@@ -1,13 +1,18 @@
 # FSO4-bloglist
 Bloglist exercise, Fullstackopen 2021
 
-Lessee :D
+An application that should handle blog-listings with user-creation and -authentication.
+
+Backend to exercise 5 of Fullstackopen.
 
 # How to run:
 
 Clone repository
+
 Run "npm install" in its directory
+
 Define ENVs PORT and MONGODB_URI (.env supportedl)
+
 Run "npm start"
 
 # Cataloque of bashing my head to the wall

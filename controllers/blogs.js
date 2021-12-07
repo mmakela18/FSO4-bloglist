@@ -3,8 +3,8 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
+// Return all blog entries as json
 blogsRouter.get('/', async(req, res, next) => {
-  // fetch all entries
   try {
     const blogs = await Blog.find({}).populate('user',
       { username: 1 }
@@ -15,25 +15,31 @@ blogsRouter.get('/', async(req, res, next) => {
   }
 })
 
+// Handle an attempt to add a blog-entry
 blogsRouter.post('/', async(req, res, next) => {
+  // Middleware brought us user identification as a token
   const token = req.token
   if (!token) return res.status(401).json({ error: 'no token provided' })
+  // Verify that the token translates into a valid user
   const decodedToken = jwt.verify(token, process.env.SECRET)
   if(!decodedToken) {
     return res.status(401).json({ error: 'invalid authentication token' })
   }
-  const postBlog = new Blog(req.body)
-  // for now: just place the first user in db as author
+  // Find the user and prepare the blog-entry
+  // HOX: shouldn't this be in a try-catch too?
   const user = await User.findById(decodedToken.id)
-  console.log(user)
+  const postBlog = new Blog(req.body)
+  // HOX: use spread syntax so that url is also included
+  // Intention: create new Blog that includes the user-id
   const withUser = new Blog({
     title: postBlog.title,
     author: postBlog.author,
     user: user._id
   })
   try {
+    // Try to save the blog-entry
     const result = await withUser.save()
-    // i guess we made it?
+    // Update the user to include ownership of the new blog-entry
     user.blogs = user.blogs.concat(result._id)
     await user.save({
       // Validator will cry about "duplicate _id" without this option
@@ -51,11 +57,10 @@ blogsRouter.put('/:id', async(req, res, next) => {
     const id = req.params.id
     // find user and blog, see if owner matches
     let blogToEdit = await Blog.findById(id)
-    console.log(req)
-    console.log(req.user)
+    // User we get from middleware. See that authorization matches Blog ownership
     if (req.user._id.toString() === blogToEdit.user.toString()) {
-      // for some reason the blog is in _doc, not directly in body
       const newInfo = req.body
+      // HOX: this is ugly, replace with spread syntax
       blogToEdit.title = newInfo.title
       blogToEdit.author = newInfo.author
       blogToEdit.likes = newInfo.likes
