@@ -29,15 +29,19 @@ blogsRouter.post('/', async(req, res, next) => {
   // HOX: shouldn't this be in a try-catch too?
   const user = await User.findById(decodedToken.id)
   const postBlog = new Blog(req.body)
-  // HOX: use spread syntax so that url is also included
   // Intention: create new Blog that includes the user-id
+  // How about some spread-notation eh?
   const withUser = new Blog({
     title: postBlog.title,
     author: postBlog.author,
+    url: postBlog.url,
     user: user._id
   })
   try {
     // Try to save the blog-entry
+    withUser.populate('user',
+      { username: 1 }
+    )
     const result = await withUser.save()
     // Update the user to include ownership of the new blog-entry
     user.blogs = user.blogs.concat(result._id)
